@@ -6,6 +6,7 @@ Yafti GTK - A simple GTK GUI for running scripts from yafti.yml
 import subprocess
 import sys
 import threading
+import os
 
 import gi
 import yaml
@@ -59,7 +60,16 @@ def initialize_gtk():
     """Initialize GTK, Adwaita, and application metadata."""
     GLib.set_prgname(APP_ID)
     Gtk.init()
-    Adw.init()
+    # Only initialize libadwaita when running on a GNOME desktop
+    try:
+        xdg = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
+        session = os.environ.get('DESKTOP_SESSION', '').lower()
+        is_gnome = ('gnome' in xdg) or ('gnome' in session)
+        if is_gnome:
+            Adw.init()
+    except Exception as e:
+        # Don't fail startup if Adw isn't available or init fails
+        print(f"Warning: Adw init skipped or failed: {e}")
     
     try:
         Gtk.Window.set_default_icon_name(APP_ID)
